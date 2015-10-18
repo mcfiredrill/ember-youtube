@@ -27,6 +27,9 @@ export default Ember.Component.extend({
 	// https://developers.google.com/youtube/player_parameters#Parameters
 	// https://developers.google.com/youtube/youtube_player_demo
 	playerVars: {},
+        height: 360,
+        width: 270,
+        mute: false,
 
 	// from YT.PlayerState
 	stateNames: {
@@ -147,9 +150,56 @@ export default Ember.Component.extend({
 		});
 	},
 
-	// Gets called by the YouTube player.
-	onPlayerStateChange(event) {
-		// Set a readable state name
+	// Load (and plays) a video every time ytid changes
+	loadVideo: observer('ytid', function() {
+		let id = this.get('ytid');
+		let player = this.get('player');
+
+		// make sure we have access to the functions we need
+		// otherwise the player might die
+		if (!id || !player.loadVideoById || !player.cueVideoById) {
+			if (this.get('showDebug')) { debug('no id'); }
+			return;
+		}
+
+		let options = {
+			'videoId': id,
+			'startSeconds': this.get('startSeconds'),
+			'endSeconds': this.get('endSeconds'),
+			'suggestedQuality': this.get('suggestedQuality')
+		};
+
+                if(this.get('mute') == true){
+                  player.mute();
+                }
+
+		if (this.playerVars.autoplay) {
+			player.loadVideoById(options);
+		} else {
+			player.cueVideoById(options);
+		}
+	}),
+
+	volume: computed({
+		get: function() {
+			return this.get('player').getVolume();
+		}, set: function(name, volume) {
+			// Clamp between 0 and 100
+			if (volume > 100) {
+				volume = 100;
+			} else if (volume < 0) {
+				volume = 0;
+			}
+			let player = this.get('player');
+			if (player) {
+				this.get('player').setVolume(volume);
+			}
+		}
+	}),
+
+	// called by YouTube
+	onPlayerStateChange: function(event) {
+		// Get a readable state name
 		let state = this.get('stateNames.' + event.data.toString());
 		this.set('playerState', state);
 		if (this.get('showDebug')) {
