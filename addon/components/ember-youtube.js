@@ -27,8 +27,6 @@ export default Ember.Component.extend({
 	// https://developers.google.com/youtube/player_parameters#Parameters
 	// https://developers.google.com/youtube/youtube_player_demo
 	playerVars: {},
-        height: 360,
-        width: 270,
         mute: false,
 
 	// from YT.PlayerState
