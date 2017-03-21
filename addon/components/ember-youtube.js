@@ -148,52 +148,6 @@ export default Ember.Component.extend({
 		});
 	},
 
-	// Load (and plays) a video every time ytid changes
-	loadVideo: observer('ytid', function() {
-		let id = this.get('ytid');
-		let player = this.get('player');
-
-		// make sure we have access to the functions we need
-		// otherwise the player might die
-		if (!id || !player.loadVideoById || !player.cueVideoById) {
-			if (this.get('showDebug')) { debug('no id'); }
-			return;
-		}
-
-		let options = {
-			'videoId': id,
-			'startSeconds': this.get('startSeconds'),
-			'endSeconds': this.get('endSeconds'),
-			'suggestedQuality': this.get('suggestedQuality')
-		};
-
-                if(this.get('mute') == true){
-                  player.mute();
-                }
-
-		if (this.playerVars.autoplay) {
-			player.loadVideoById(options);
-		} else {
-			player.cueVideoById(options);
-		}
-	}),
-
-	volume: computed({
-		get: function() {
-			return this.get('player').getVolume();
-		}, set: function(name, volume) {
-			// Clamp between 0 and 100
-			if (volume > 100) {
-				volume = 100;
-			} else if (volume < 0) {
-				volume = 0;
-			}
-			let player = this.get('player');
-			if (player) {
-				this.get('player').setVolume(volume);
-			}
-		}
-	}),
 
 	// called by YouTube
 	onPlayerStateChange: function(event) {
@@ -272,12 +226,17 @@ export default Ember.Component.extend({
 		// Set parameters for the video to be played.
 		let options = Ember.getProperties(this, ['startSeconds', 'endSeconds', 'suggestedQuality']);
 		options.videoId = ytid;
+
 		// Either load or cue depending on `autoplay`.
 		if (this.playerVars.autoplay) {
 			player.loadVideoById(options);
 		} else {
 			player.cueVideoById(options);
 		}
+
+                if(this.get('mute') == true){
+                  player.mute();
+                }
 	},
 
 	startTimer() {
